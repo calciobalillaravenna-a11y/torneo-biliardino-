@@ -375,7 +375,6 @@
 
         function getPlayerShareUrl() {
             let url = window.location.href;
-            // Clear blob: prefix if present in preview sandbox
             if (url.startsWith('blob:')) {
                 url = url.replace('blob:', '');
             }
@@ -392,12 +391,19 @@
         function routeCurrentView() {
             hideAllViews();
 
+            // Check if URL explicitly requests player mode via hash
+            if (window.location.hash === '#player') {
+                userRole = 'player';
+            }
+
+            // Se il torneo non è ancora avviato, mostra SEMPRE il setup admin (solo per l'admin locale)
             if (tournamentData.status === 'setup') {
                 document.getElementById('view-setup').classList.remove('hidden');
                 renderSetupPairs();
                 return;
             }
 
+            // Se siamo in modalità giocatore
             if (userRole === 'player') {
                 const selectedPair = localStorage.getItem('biliardino_selected_pair');
                 if (!selectedPair) {
@@ -406,6 +412,7 @@
                 }
             }
 
+            // Altrimenti mostra la dashboard live
             document.getElementById('view-live-dashboard').classList.remove('hidden');
             const roleEl = document.getElementById('user-display-role');
             if (roleEl) {
@@ -601,7 +608,7 @@
             const pairs = tournamentData.pairs || [];
 
             if (pairs.length === 0) {
-                list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Nessuna coppia trovata.</p>`;
+                list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Nessuna coppia trovata. Avvia prima il torneo dall'Admin.</p>`;
                 return;
             }
 
@@ -789,7 +796,7 @@
                                         return `
                                             <tr class="hover:bg-slate-800/30 transition ${rowBgClass}">
                                                 <td class="py-3 px-4 text-center font-mono ${posColor}">
-                                                    #${idx + 1} ${isQual ? '🟢' : '🔴'}
+                                                    #${idx + 1}${isQual ? '🟢' : '🔴'}
                                                 </td>
                                                 <td class="py-3 px-4 font-semibold text-white">${st.name}</td>
                                                 <td class="py-3 px-3 text-center text-slate-300">${st.played}</td>
