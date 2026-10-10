@@ -30,7 +30,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-full flex flex-col antialiased selection:bg-brand-500 selection:text-white">
 
-    <!-- STEP 1: ADMIN SETUP PANEL -->
+    <!-- STEP 1: ADMIN SETUP & CONFIGURATION PANEL -->
     <div id="view-setup" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4 overflow-y-auto hidden">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative space-y-6 my-auto">
             <div class="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -40,12 +40,12 @@
                     </div>
                     <div>
                         <h2 class="text-xl font-bold text-white">Pannello Amministratore</h2>
-                        <p class="text-xs text-slate-400">Configura il torneo e incolla la lista da WhatsApp</p>
+                        <p class="text-xs text-slate-400">Configura il torneo prima di generare il link per i giocatori</p>
                     </div>
                 </div>
             </div>
 
-            <!-- WhatsApp Paste Box -->
+            <!-- WhatsApp Paste Parser Box -->
             <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2 text-brand-400 font-bold text-xs uppercase tracking-wider">
@@ -54,7 +54,9 @@
                     </div>
                     <span id="setup-extracted-count" class="text-xs font-bold text-brand-400">0 coppie pronte</span>
                 </div>
-                <p class="text-xs text-slate-400">Incolla il testo copiato da WhatsApp. Estrazione automatica dei nomi.</p>
+                <p class="text-xs text-slate-400">
+                    Incolla la lista copiata da WhatsApp. Il sistema riconosce automaticamente le coppie.
+                </p>
                 <textarea id="setup-whatsapp-input" rows="4" placeholder="1. Mario Rossi - Luca Bianchi&#10;2) Giuseppe Verdi / Francesco Neri&#10;3. Paolo Rinaldi & Andrea Gialli..." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white placeholder-slate-600 focus:outline-none focus:border-brand-500 text-xs font-mono"></textarea>
                 <button type="button" onclick="parseSetupWhatsAppList()" class="w-full py-2.5 bg-brand-500 hover:bg-brand-600 active:scale-98 text-slate-950 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-2 shadow-md cursor-pointer">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -83,4 +85,1012 @@
                     <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Numero Gironi</label>
                     <input type="number" id="setup-groups-count" value="3" min="1" max="8" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500 font-mono">
                 </div>
-                <div class="bg-slate-950/50 border border-slate-800
+                <div class="bg-slate-950/50 border border-slate-800 rounded-2xl p-4 space-y-2">
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Qualificate x Girone</label>
+                    <input type="number" id="setup-qualify-count" value="4" min="1" max="8" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500 font-mono">
+                </div>
+            </div>
+
+            <!-- Start Action Button -->
+            <button type="button" onclick="launchSetupTournament()" class="w-full py-4 bg-brand-500 hover:bg-brand-600 active:scale-98 text-slate-950 font-extrabold rounded-2xl text-base shadow-xl shadow-brand-500/25 transition flex items-center justify-center space-x-2 cursor-pointer">
+                <i class="fa-solid fa-play"></i>
+                <span>AVVIA TORNEO & OTTIENI LINK GIOCATORI 🚀</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ADMIN LAUNCH SUCCESS / SHARE BANNER -->
+    <div id="admin-launch-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-5 text-center">
+            <div class="w-16 h-16 bg-brand-500/20 text-brand-400 border border-brand-500/40 rounded-2xl mx-auto flex items-center justify-center text-3xl">
+                <i class="fa-solid fa-check-circle"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-white">Torneo Avviato con Successo!</h3>
+                <p class="text-xs text-slate-400 mt-1">Invia questo link ai giocatori. Ciascuno sceglierà la propria coppia per confermare la presenza.</p>
+            </div>
+
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col items-center justify-center space-y-2">
+                <img id="admin-launch-qr" src="" alt="QR Code Torneo" class="w-44 h-44 rounded-xl border border-slate-700 p-2 bg-white">
+                <span class="text-[10px] text-slate-400 font-mono">Inquadra dal telefono dei giocatori</span>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <input type="text" id="admin-launch-link" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 font-mono select-all">
+                <button type="button" onclick="copyAdminLink()" class="px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold rounded-xl text-xs transition cursor-pointer flex-shrink-0">
+                    Copia Link
+                </button>
+            </div>
+
+            <button type="button" onclick="closeAdminLaunchModal()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition cursor-pointer">
+                Vai alla Dashboard Admin
+            </button>
+        </div>
+    </div>
+
+    <!-- STEP 2: PLAYER CHECK-IN SCREEN -->
+    <div id="view-player-checkin" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4 overflow-y-auto hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden my-auto text-center">
+            <div class="w-16 h-16 bg-brand-500/20 border border-brand-500/40 text-brand-400 rounded-2xl mx-auto flex items-center justify-center text-3xl">
+                <i class="fa-solid fa-users-line"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-extrabold text-white">Seleziona la tua Coppia</h2>
+                <p class="text-xs text-slate-400 mt-1">Clicca sul nome della tua coppia per confermare la presenza ed entrare nel torneo.</p>
+            </div>
+
+            <div id="checkin-pairs-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1 text-left">
+                <!-- Pair items populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 3: LIVE TOURNAMENT WORKSPACE -->
+    <div id="view-live-dashboard" class="flex-1 flex flex-col hidden">
+        <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-brand-500/20 border border-brand-500/40 text-brand-400 rounded-xl flex items-center justify-center text-lg font-bold">
+                        ⚽
+                    </div>
+                    <div>
+                        <h1 class="text-base font-bold text-white flex items-center space-x-2">
+                            <span>Torneo Biliardino</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] bg-brand-500/20 text-brand-400 border border-brand-500/30">LIVE</span>
+                        </h1>
+                        <p class="text-xs text-slate-400">Ruolo: <span id="user-display-role" class="text-brand-400 font-bold">Giocatore</span></p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="switchUserRolePrompt()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-sky-400 font-semibold rounded-xl text-xs transition flex items-center space-x-1.5 cursor-pointer">
+                        <i class="fa-solid fa-user-gear"></i>
+                        <span class="hidden sm:inline">Cambia Coppia / Ruolo</span>
+                    </button>
+                    <button type="button" onclick="openShareModal()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center space-x-1.5 cursor-pointer">
+                        <i class="fa-solid fa-qrcode text-brand-400"></i>
+                        <span class="hidden sm:inline">Invia Link / QR</span>
+                    </button>
+                    <button type="button" onclick="openAdminConfigModal()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 font-semibold rounded-xl text-xs transition flex items-center space-x-1.5 cursor-pointer">
+                        <i class="fa-solid fa-gear"></i>
+                        <span class="hidden sm:inline">Pannello Admin</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace Content -->
+        <main class="flex-1 max-w-7xl w-full mx-auto p-4 pb-28">
+
+            <!-- Turn Alert Banner for Players -->
+            <div id="turn-alert-banner" class="hidden mb-6 rounded-2xl p-4 shadow-xl flex items-center justify-between transition-all duration-300">
+                <div class="flex items-center space-x-3">
+                    <div id="turn-alert-icon" class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-2xl">🔥</div>
+                    <div>
+                        <h3 id="turn-alert-title" class="font-bold text-sm text-white">AVVISO PARTITA</h3>
+                        <p id="turn-alert-details" class="text-xs text-white/90">Stato aggiornato in tempo reale.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="dismissTurnAlert()" class="bg-black/20 hover:bg-black/30 px-3 py-1.5 rounded-lg text-xs font-semibold text-white cursor-pointer">Ok</button>
+            </div>
+
+            <!-- Tab 1: Live Matches -->
+            <section id="tab-matches" class="space-y-6">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center space-x-2">
+                            <i class="fa-solid fa-bolt text-amber-400"></i>
+                            <span>Biliardini & Partite Live</span>
+                        </h2>
+                        <p class="text-xs text-slate-400">Gestione automatica e continua dei tavoli liberi</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button type="button" onclick="switchMatchSubTab('live')" id="subtab-live-btn" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-500 text-slate-950 transition cursor-pointer">In Corso</button>
+                        <button type="button" onclick="switchMatchSubTab('upcoming')" id="subtab-upcoming-btn" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition cursor-pointer">Coda</button>
+                        <button type="button" onclick="switchMatchSubTab('finished')" id="subtab-finished-btn" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition cursor-pointer">Terminate</button>
+                    </div>
+                </div>
+
+                <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Matches rendered dynamically -->
+                </div>
+            </section>
+
+            <!-- Tab 2: Standings -->
+            <section id="tab-standings" class="space-y-6 hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center space-x-2">
+                            <i class="fa-solid fa-trophy text-amber-400"></i>
+                            <span>Gironi & Classifiche Live</span>
+                        </h2>
+                        <p class="text-xs text-slate-400">
+                            <span class="text-brand-400 font-bold">Verde</span> = qualificate | 
+                            <span class="text-rose-400 font-bold">Rosso</span> = eliminate
+                        </p>
+                    </div>
+                </div>
+                <div id="groups-standings-container" class="space-y-6"></div>
+            </section>
+
+            <!-- Tab 3: Playoff & Brackets -->
+            <section id="tab-brackets" class="space-y-6 hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center space-x-2">
+                            <i class="fa-solid fa-sitemap text-brand-400"></i>
+                            <span>Tabellone Playoff & Incroci</span>
+                        </h2>
+                        <p class="text-xs text-slate-400">Accoppiamenti calcolati dalle classifiche dei gironi</p>
+                    </div>
+                    <button type="button" onclick="generateKnockoutBracket()" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold rounded-xl text-xs transition shadow-md cursor-pointer">
+                        Genera Playoff
+                    </button>
+                </div>
+                <div id="knockout-container" class="space-y-4"></div>
+            </section>
+
+            <!-- Tab 4: Pairs -->
+            <section id="tab-pairs" class="space-y-6 hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center space-x-2">
+                            <i class="fa-solid fa-user-group text-brand-400"></i>
+                            <span>Coppie & Stato Presenze</span>
+                        </h2>
+                        <p class="text-xs text-slate-400">Elenco delle coppie iscritte e presenza confermata</p>
+                    </div>
+                </div>
+                <div id="pairs-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+            </section>
+
+        </main>
+
+        <!-- Bottom Navigation Bar -->
+        <nav class="fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-2 py-2">
+            <div class="max-w-md mx-auto flex items-center justify-around">
+                <button type="button" onclick="switchTab('matches')" id="nav-tab-matches" class="flex flex-col items-center space-y-1 text-brand-400 transition py-1 px-3 rounded-xl cursor-pointer">
+                    <i class="fa-solid fa-futbol text-base"></i>
+                    <span class="text-[10px] font-semibold">Partite</span>
+                </button>
+                <button type="button" onclick="switchTab('standings')" id="nav-tab-standings" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200 transition py-1 px-3 rounded-xl cursor-pointer">
+                    <i class="fa-solid fa-trophy text-base"></i>
+                    <span class="text-[10px] font-semibold">Gironi</span>
+                </button>
+                <button type="button" onclick="switchTab('brackets')" id="nav-tab-brackets" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200 transition py-1 px-3 rounded-xl cursor-pointer">
+                    <i class="fa-solid fa-sitemap text-base"></i>
+                    <span class="text-[10px] font-semibold">Playoff</span>
+                </button>
+                <button type="button" onclick="switchTab('pairs')" id="nav-tab-pairs" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200 transition py-1 px-3 rounded-xl cursor-pointer">
+                    <i class="fa-solid fa-user-group text-base"></i>
+                    <span class="text-[10px] font-semibold">Coppie</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- MODALS -->
+    <div id="share-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 text-brand-400 font-bold text-sm">
+                    <i class="fa-solid fa-share-nodes text-lg"></i>
+                    <span>Link Giocatori & QR Code</span>
+                </div>
+                <button type="button" onclick="closeShareModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-400">
+                Manda questo link sul gruppo WhatsApp per far scegliere ai giocatori la propria coppia.
+            </p>
+
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col items-center justify-center space-y-2">
+                <img id="share-qr-code" src="" alt="QR Code Torneo" class="w-44 h-44 rounded-xl border border-slate-700 p-2 bg-white">
+                <span class="text-[10px] text-slate-400 font-mono">Inquadra con la Fotocamera</span>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <input type="text" id="share-modal-link" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 font-mono select-all">
+                <button type="button" onclick="copyShareModalLink()" class="px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold rounded-xl text-xs transition cursor-pointer flex-shrink-0">
+                    Copia Link
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="score-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 id="modal-match-title" class="text-lg font-bold text-white">Inserisci Risultato</h3>
+                    <p id="modal-match-table" class="text-xs text-brand-400 font-medium">Biliardino 1</p>
+                </div>
+                <button type="button" onclick="closeScoreModal()" class="text-slate-400 hover:text-white p-2 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <input type="hidden" id="active-match-id">
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 text-center space-y-3">
+                    <div id="modal-team1-name" class="font-bold text-xs text-slate-200 truncate">Coppia 1</div>
+                    <div class="text-4xl font-extrabold text-white" id="modal-score1">0</div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <button type="button" onclick="adjustScore(1, -1)" class="w-10 h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-lg cursor-pointer">-</button>
+                        <button type="button" onclick="adjustScore(1, 1)" class="w-10 h-10 bg-brand-500 hover:bg-brand-600 text-slate-950 rounded-xl font-bold text-lg cursor-pointer">+</button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 text-center space-y-3">
+                    <div id="modal-team2-name" class="font-bold text-xs text-slate-200 truncate">Coppia 2</div>
+                    <div class="text-4xl font-extrabold text-white" id="modal-score2">0</div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <button type="button" onclick="adjustScore(2, -1)" class="w-10 h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-lg cursor-pointer">-</button>
+                        <button type="button" onclick="adjustScore(2, 1)" class="w-10 h-10 bg-brand-500 hover:bg-brand-600 text-slate-950 rounded-xl font-bold text-lg cursor-pointer">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" onclick="saveMatchScore()" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold rounded-xl text-sm shadow-lg shadow-brand-500/20 transition cursor-pointer">
+                Salva Risultato & Libera Tavolo ⚽
+            </button>
+        </div>
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        let tournamentData = {
+            status: 'setup',
+            pairs: [],
+            matches: [],
+            knockoutMatches: [],
+            settings: { tablesCount: 4, groupsCount: 3, qualifyCount: 4 }
+        };
+
+        let tempParsedPairs = [];
+        let userRole = 'admin'; // 'admin' or 'player'
+
+        function saveCurrentState() {
+            localStorage.setItem('biliardino_tournament_state', JSON.stringify(tournamentData));
+            localStorage.setItem('biliardino_user_role', userRole);
+        }
+
+        function getPlayerShareUrl() {
+            let url = window.location.href;
+            if (url.startsWith('blob:')) {
+                url = url.replace('blob:', '');
+            }
+            const baseUrl = url.split('#')[0].split('?')[0];
+            return baseUrl + '#player';
+        }
+
+        function hideAllViews() {
+            document.getElementById('view-setup').classList.add('hidden');
+            document.getElementById('view-player-checkin').classList.add('hidden');
+            document.getElementById('view-live-dashboard').classList.add('hidden');
+        }
+
+        function routeCurrentView() {
+            hideAllViews();
+
+            const isPlayerHash = window.location.hash === '#player';
+            if (isPlayerHash) {
+                userRole = 'player';
+            }
+
+            if (tournamentData.status === 'setup' && !isPlayerHash) {
+                userRole = 'admin';
+                document.getElementById('view-setup').classList.remove('hidden');
+                renderSetupPairs();
+                return;
+            }
+
+            if (userRole === 'player' || isPlayerHash) {
+                userRole = 'player';
+                const selectedPair = localStorage.getItem('biliardino_selected_pair');
+                if (!selectedPair) {
+                    openCheckinGateway();
+                    return;
+                }
+            }
+
+            document.getElementById('view-live-dashboard').classList.remove('hidden');
+            const roleEl = document.getElementById('user-display-role');
+            if (roleEl) {
+                const myPair = localStorage.getItem('biliardino_selected_pair');
+                roleEl.innerText = userRole === 'player' ? `Giocatore (${myPair || 'Nessuna coppia'})` : 'Amministratore';
+            }
+            renderApp();
+        }
+
+        function switchUserRolePrompt() {
+            localStorage.removeItem('biliardino_selected_pair');
+            userRole = 'player';
+            openCheckinGateway();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedData = localStorage.getItem('biliardino_tournament_state');
+            if (savedData) {
+                try {
+                    tournamentData = JSON.parse(savedData);
+                    if (tournamentData.pairs && tournamentData.pairs.length > 0) {
+                        tempParsedPairs = [...tournamentData.pairs];
+                    }
+                } catch(e) {
+                    console.error("Storage parse error", e);
+                }
+            }
+
+            routeCurrentView();
+        });
+
+        function parseSetupWhatsAppList() {
+            const rawText = document.getElementById('setup-whatsapp-input').value;
+            if (!rawText || !rawText.trim()) {
+                alert("Per favore incolla prima la lista nel riquadro!");
+                return;
+            }
+
+            const lines = rawText.split('\n');
+            let addedCount = 0;
+
+            lines.forEach(line => {
+                let cleaned = line.trim();
+                if (!cleaned) return;
+
+                cleaned = cleaned.replace(/^[\d\s.\-°)\]]+/, '').trim();
+                if (!cleaned) return;
+
+                if (cleaned.length >= 2) {
+                    const exists = tempParsedPairs.some(p => p.name.toLowerCase() === cleaned.toLowerCase());
+                    if (!exists) {
+                        tempParsedPairs.push({
+                            id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                            name: cleaned,
+                            group: 'A',
+                            checkedIn: true // Default a true così le partite partono subito in automatico con i check-in
+                        });
+                        addedCount++;
+                    }
+                }
+            });
+
+            if (addedCount > 0) {
+                document.getElementById('setup-whatsapp-input').value = '';
+                renderSetupPairs();
+            } else {
+                alert("Nessuna nuova coppia trovata.");
+            }
+        }
+
+        function renderSetupPairs() {
+            const container = document.getElementById('setup-pairs-container');
+            const totalEl = document.getElementById('setup-pairs-total');
+            const extractedEl = document.getElementById('setup-extracted-count');
+
+            if (!container) return;
+
+            totalEl.innerText = tempParsedPairs.length;
+            extractedEl.innerText = `${tempParsedPairs.length} coppie pronte`;
+
+            if (tempParsedPairs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center col-span-full py-4">Incolla la lista sopra per aggiungere le coppie.</p>`;
+                return;
+            }
+
+            container.innerHTML = tempParsedPairs.map((p, idx) => `
+                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-slate-800 text-xs">
+                    <span class="font-bold text-slate-200 truncate pr-2"><span class="text-brand-400">${idx + 1}.</span> ${p.name}</span>
+                    <button type="button" onclick="removeSetupPair('${p.id}')" class="text-slate-500 hover:text-rose-400 p-1"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function removeSetupPair(id) {
+            tempParsedPairs = tempParsedPairs.filter(p => p.id !== id);
+            renderSetupPairs();
+        }
+
+        function clearSetupPairs() {
+            tempParsedPairs = [];
+            renderSetupPairs();
+        }
+
+        function launchSetupTournament() {
+            if (tempParsedPairs.length < 2) {
+                alert("Inserisci almeno 2 coppie per avviare il torneo!");
+                return;
+            }
+
+            const tablesCount = parseInt(document.getElementById('setup-tables-count').value) || 4;
+            const groupsCount = parseInt(document.getElementById('setup-groups-count').value) || 3;
+            const qualifyCount = parseInt(document.getElementById('setup-qualify-count').value) || 4;
+
+            const groupLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].slice(0, groupsCount);
+
+            const assignedPairs = tempParsedPairs.map((p, idx) => ({
+                ...p,
+                group: groupLetters[idx % groupsCount],
+                checkedIn: true // Appena avviato, consideriamo tutte le coppie operative per riempire i biliardini
+            }));
+
+            const matches = [];
+            let matchId = 1;
+
+            groupLetters.forEach(gName => {
+                const gPairs = assignedPairs.filter(p => p.group === gName);
+                for (let i = 0; i < gPairs.length; i++) {
+                    for (let j = i + 1; j < gPairs.length; j++) {
+                        matches.push({
+                            id: 'm_' + (matchId++),
+                            group: gName,
+                            team1: gPairs[i].name,
+                            team2: gPairs[j].name,
+                            score1: 0,
+                            score2: 0,
+                            status: 'scheduled',
+                            table: null
+                        });
+                    }
+                }
+            });
+
+            tournamentData = {
+                status: 'live',
+                pairs: assignedPairs,
+                matches: matches,
+                knockoutMatches: [],
+                settings: { tablesCount, groupsCount, qualifyCount }
+            };
+
+            fillAvailableTables();
+            saveCurrentState();
+
+            const shareUrl = getPlayerShareUrl();
+            document.getElementById('admin-launch-link').value = shareUrl;
+            document.getElementById('admin-launch-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(shareUrl)}`;
+            document.getElementById('admin-launch-modal').classList.remove('hidden');
+        }
+
+        function closeAdminLaunchModal() {
+            document.getElementById('admin-launch-modal').classList.add('hidden');
+            routeCurrentView();
+        }
+
+        function copyAdminLink() {
+            const input = document.getElementById('admin-launch-link');
+            input.select();
+            document.execCommand('copy');
+            alert("Link per i giocatori copiato negli appunti!");
+        }
+
+        function openAdminConfigModal() {
+            if (confirm("Vuoi accedere al pannello di configurazione del torneo?")) {
+                tournamentData.status = 'setup';
+                saveCurrentState();
+                routeCurrentView();
+            }
+        }
+
+        function openCheckinGateway() {
+            hideAllViews();
+            document.getElementById('view-player-checkin').classList.remove('hidden');
+
+            const list = document.getElementById('checkin-pairs-list');
+            const pairs = tournamentData.pairs || [];
+
+            if (pairs.length === 0) {
+                list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Nessuna coppia trovata. L'amministratore deve prima avviare il torneo.</p>`;
+                return;
+            }
+
+            list.innerHTML = pairs.map(p => `
+                <button type="button" onclick="selectMyPair('${p.name.replace(/'/g, "\\'")}')" class="w-full text-left p-3.5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-brand-500 hover:bg-slate-800/50 transition font-bold text-sm text-slate-200 flex items-center justify-between group cursor-pointer">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-xl ${p.checkedIn ? 'bg-brand-500/20 text-brand-400' : 'bg-slate-800 text-slate-400'} flex items-center justify-center font-bold text-xs group-hover:bg-brand-500 group-hover:text-slate-950 transition">
+                            ${p.checkedIn ? '🟢' : '⚽'}
+                        </div>
+                        <div>
+                            <span>${p.name}</span>
+                            <span class="block text-[10px] text-slate-400 font-normal">Girone ${p.group || 'A'} ${p.checkedIn ? '• Presente' : '• In Attesa'}</span>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-arrow-right text-brand-400 text-xs"></i>
+                </button>
+            `).join('');
+        }
+
+        function selectMyPair(pairName) {
+            localStorage.setItem('biliardino_selected_pair', pairName);
+            userRole = 'player';
+
+            const p = (tournamentData.pairs || []).find(x => x.name === pairName);
+            if (p) {
+                p.checkedIn = true;
+            }
+
+            fillAvailableTables();
+            saveCurrentState();
+            routeCurrentView();
+        }
+
+        let currentMatchSubTab = 'live';
+
+        function renderApp() {
+            fillAvailableTables();
+            renderMatches();
+            renderStandings();
+            renderBrackets();
+            renderPairs();
+            checkUserTurnAlert();
+        }
+
+        function switchMatchSubTab(subtab) {
+            currentMatchSubTab = subtab;
+            ['live', 'upcoming', 'finished'].forEach(st => {
+                const btn = document.getElementById(`subtab-${st}-btn`);
+                btn.className = st === subtab ? "px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-500 text-slate-950 transition cursor-pointer" : "px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition cursor-pointer";
+            });
+            renderMatches();
+        }
+
+        function renderMatches() {
+            const container = document.getElementById('matches-container');
+            const matches = tournamentData.matches || [];
+            const filtered = matches.filter(m => {
+                if (currentMatchSubTab === 'live') return m.status === 'live';
+                if (currentMatchSubTab === 'upcoming') return m.status === 'scheduled';
+                if (currentMatchSubTab === 'finished') return m.status === 'finished';
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-12 bg-slate-900/40 border border-slate-800/80 rounded-2xl text-center text-slate-500"><p class="text-sm">Nessuna partita in questa sezione.</p></div>`;
+                return;
+            }
+
+            const scheduledMatches = matches.filter(m => m.status === 'scheduled');
+
+            container.innerHTML = filtered.map(m => {
+                let queueInfo = '';
+                if (m.status === 'scheduled') {
+                    const queueIdx = scheduledMatches.findIndex(x => x.id === m.id);
+                    if (queueIdx >= 0) {
+                        queueInfo = `<span class="text-[11px] text-amber-400 font-medium">In coda (#${queueIdx + 1})</span>`;
+                    }
+                }
+
+                return `
+                    <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-5 shadow-xl relative">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-brand-400">
+                                <i class="fa-solid fa-table mr-1"></i> Biliardino ${m.table || 1} (Girone ${m.group})
+                            </span>
+                            <div class="flex items-center space-x-2">
+                                ${queueInfo}
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold ${m.status === 'live' ? 'bg-amber-500/20 text-amber-400 animate-pulse' : m.status === 'finished' ? 'bg-brand-500/20 text-brand-400' : 'bg-slate-800 text-slate-400'}">
+                                    ${m.status === 'live' ? '● In Corso' : m.status === 'finished' ? 'Terminata' : 'In Coda'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="space-y-3 mb-4">
+                            <div class="flex items-center justify-between bg-slate-950/60 p-3 rounded-xl border border-slate-800/60">
+                                <span class="font-bold text-xs text-slate-200 truncate pr-2">${m.team1}</span>
+                                <span class="text-xl font-extrabold text-white w-8 text-center">${m.score1 !== undefined ? m.score1 : 0}</span>
+                            </div>
+                            <div class="flex items-center justify-between bg-slate-950/60 p-3 rounded-xl border border-slate-800/60">
+                                <span class="font-bold text-xs text-slate-200 truncate pr-2">${m.team2}</span>
+                                <span class="text-xl font-extrabold text-white w-8 text-center">${m.score2 !== undefined ? m.score2 : 0}</span>
+                            </div>
+                        </div>
+                        <button type="button" onclick="openScoreModal('${m.id}')" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1.5 cursor-pointer">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span>Inserisci / Aggiorna Risultato</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderStandings() {
+            const container = document.getElementById('groups-standings-container');
+            const pairs = tournamentData.pairs || [];
+            const matches = tournamentData.matches || [];
+            const groupsCount = tournamentData.settings?.groupsCount || 3;
+            const qualifyLimit = tournamentData.settings?.qualifyCount || 4;
+            const groupNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].slice(0, groupsCount);
+
+            if (pairs.length === 0) {
+                container.innerHTML = `<div class="py-12 text-center text-slate-500 text-sm bg-slate-900/40 rounded-2xl border border-slate-800">Nessuna coppia registrata.</div>`;
+                return;
+            }
+
+            container.innerHTML = groupNames.map(gName => {
+                const groupPairs = pairs.filter(p => p.group === gName);
+                if (groupPairs.length === 0) return '';
+
+                const stats = {};
+                groupPairs.forEach(p => {
+                    stats[p.name] = { name: p.name, played: 0, won: 0, lost: 0, gf: 0, ga: 0, points: 0 };
+                });
+
+                matches.filter(m => m.group === gName && m.status === 'finished').forEach(m => {
+                    const t1 = m.team1, t2 = m.team2;
+                    const s1 = parseInt(m.score1) || 0, s2 = parseInt(m.score2) || 0;
+                    const diff = s1 - s2;
+
+                    if (stats[t1]) {
+                        stats[t1].played++; stats[t1].gf += s1; stats[t1].ga += s2;
+                        if (s1 > s2) {
+                            stats[t1].won++;
+                            stats[t1].points += (diff >= 2 ? 3 : 2);
+                        } else {
+                            stats[t1].lost++;
+                            stats[t1].points += (Math.abs(diff) === 1 ? 1 : 0);
+                        }
+                    }
+                    if (stats[t2]) {
+                        stats[t2].played++; stats[t2].gf += s2; stats[t2].ga += s1;
+                        if (s2 > s1) {
+                            stats[t2].won++;
+                            stats[t2].points += (Math.abs(diff) >= 2 ? 3 : 2);
+                        } else {
+                            stats[t2].lost++;
+                            stats[t2].points += (Math.abs(diff) === 1 ? 1 : 0);
+                        }
+                    }
+                });
+
+                const ranking = Object.values(stats).sort((a, b) => {
+                    if (b.points !== a.points) return b.points - a.points;
+                    const drA = a.gf - a.ga, drB = b.gf - b.ga;
+                    if (drB !== drA) return drB - drA;
+                    return b.gf - a.gf;
+                });
+
+                return `
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+                        <div class="px-5 py-3 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between">
+                            <h3 class="font-bold text-sm text-brand-400">Girone ${gName}</h3>
+                            <span class="text-xs text-slate-400">Qualificate: prime ${qualifyLimit}</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-800/30 border-b border-slate-800/80 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                                        <th class="py-2.5 px-4 w-16 text-center">Pos</th>
+                                        <th class="py-2.5 px-4">Coppia</th>
+                                        <th class="py-2.5 px-3 text-center">PG</th>
+                                        <th class="py-2.5 px-3 text-center">V</th>
+                                        <th class="py-2.5 px-3 text-center">P</th>
+                                        <th class="py-2.5 px-3 text-center">DR</th>
+                                        <th class="py-2.5 px-4 text-center font-bold text-brand-400">Punti</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800/50 text-sm">
+                                    ${ranking.map((st, idx) => {
+                                        const dr = st.gf - st.ga;
+                                        const isQual = idx < qualifyLimit;
+                                        const rowBgClass = isQual ? 'bg-brand-500/10 border-l-4 border-brand-500' : 'bg-rose-500/5 border-l-4 border-rose-500/60';
+                                        const posColor = isQual ? 'text-brand-400 font-bold' : 'text-rose-400 font-bold';
+
+                                        return `
+                                            <tr class="hover:bg-slate-800/30 transition ${rowBgClass}">
+                                                <td class="py-3 px-4 text-center font-mono ${posColor}">
+                                                    #${idx + 1}${isQual ? '🟢' : '🔴'}
+                                                </td>
+                                                <td class="py-3 px-4 font-semibold text-white">${st.name}</td>
+                                                <td class="py-3 px-3 text-center text-slate-300">${st.played}</td>
+                                                <td class="py-3 px-3 text-center text-brand-400 font-semibold">${st.won}</td>
+                                                <td class="py-3 px-3 text-center text-slate-400">${st.lost}</td>
+                                                <td class="py-3 px-3 text-center text-slate-300 font-mono">${dr > 0 ? '+' + dr : dr}</td>
+                                                <td class="py-3 px-4 text-center font-bold text-brand-400 font-mono text-base">${st.points}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getGroupRanking(gName) {
+            const pairs = (tournamentData.pairs || []).filter(p => p.group === gName);
+            const matches = (tournamentData.matches || []).filter(m => m.group === gName && m.status === 'finished');
+            const stats = {};
+            pairs.forEach(p => { stats[p.name] = { name: p.name, points: 0, gf: 0, ga: 0 }; });
+
+            matches.forEach(m => {
+                const t1 = m.team1, t2 = m.team2;
+                const s1 = parseInt(m.score1) || 0, s2 = parseInt(m.score2) || 0;
+                const diff = s1 - s2;
+                if (stats[t1]) {
+                    stats[t1].gf += s1; stats[t1].ga += s2;
+                    if (s1 > s2) stats[t1].points += (diff >= 2 ? 3 : 2);
+                    else stats[t1].points += (Math.abs(diff) === 1 ? 1 : 0);
+                }
+                if (stats[t2]) {
+                    stats[t2].gf += s2; stats[t2].ga += s1;
+                    if (s2 > s1) stats[t2].points += (Math.abs(diff) >= 2 ? 3 : 2);
+                    else stats[t2].points += (Math.abs(diff) === 1 ? 1 : 0);
+                }
+            });
+
+            return Object.values(stats).sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                return (b.gf - b.ga) - (a.gf - a.ga);
+            });
+        }
+
+        function generateKnockoutBracket() {
+            const rankA = getGroupRanking('A');
+            const rankB = getGroupRanking('B');
+            const rankC = getGroupRanking('C');
+
+            const bracketMatches = [
+                { id: 'ko_1', title: 'Playoff 1', team1: rankC[1]?.name || '2° Girone C', team2: rankA[3]?.name || '4° Girone A', status: 'scheduled', score1: 0, score2: 0 },
+                { id: 'ko_2', title: 'Playoff 2', team1: rankB[2]?.name || '3° Girone B', team2: rankB[3]?.name || '4° Girone B', status: 'scheduled', score1: 0, score2: 0 },
+                { id: 'ko_3', title: 'Playoff 3', team1: rankB[1]?.name || '2° Girone B', team2: rankA[3]?.name || '4° Girone A', status: 'scheduled', score1: 0, score2: 0 },
+                { id: 'ko_4', title: 'Playoff 4', team1: rankB[2]?.name || '3° Girone B', team2: rankC[2]?.name || '3° Girone C', status: 'scheduled', score1: 0, score2: 0 }
+            ];
+
+            tournamentData.knockoutMatches = bracketMatches;
+            tournamentData.status = 'playoff';
+            saveCurrentState();
+            renderBrackets();
+            alert("Tabellone playoff generato!");
+        }
+
+        function renderBrackets() {
+            const container = document.getElementById('knockout-container');
+            const matches = tournamentData.knockoutMatches || [];
+
+            if (matches.length === 0) {
+                container.innerHTML = `<div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-8 text-center text-slate-500"><p class="text-sm">Nessun playoff generato.</p></div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-3 shadow-xl">
+                    <h3 class="font-bold text-sm text-brand-400">Passaggi Diretti (Bye)</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between">
+                            <span class="text-slate-300 font-semibold">1° Girone A & 1° Girone B</span>
+                            <span class="text-brand-400 font-bold">Diretti ⭐</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between">
+                            <span class="text-slate-300 font-semibold">1° Girone C & 2° Girone B</span>
+                            <span class="text-brand-400 font-bold">Diretti ⭐</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${matches.map(m => `
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="font-bold text-xs text-brand-400">${m.title}</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">${m.status === 'finished' ? 'Terminata' : 'Da Giocare'}</span>
+                            </div>
+                            <div class="space-y-2 mb-4 text-xs">
+                                <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                    <span class="font-semibold text-white truncate pr-2">${m.team1}</span>
+                                    <span class="font-bold text-sm text-brand-400">${m.score1}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                    <span class="font-semibold text-white truncate pr-2">${m.team2}</span>
+                                    <span class="font-bold text-sm text-brand-400">${m.score2}</span>
+                                </div>
+                            </div>
+                            <button type="button" onclick="openScoreModal('${m.id}', true)" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer">
+                                Inserisci Risultato Playoff
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderPairs() {
+            const grid = document.getElementById('pairs-grid');
+            const pairs = tournamentData.pairs || [];
+            
+            if (pairs.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-500 text-sm">Nessuna coppia registrata.</div>`;
+                return;
+            }
+            grid.innerHTML = pairs.map(p => `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-xs text-white truncate">${p.name}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-500/20 text-brand-400">Girone ${p.group || 'A'}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px]">
+                        <span class="text-slate-400">Presenza:</span>
+                        <span class="font-bold ${p.checkedIn ? 'text-brand-400' : 'text-amber-400'}">
+                            ${p.checkedIn ? '🟢 Connesso/Presente' : '🔴 In Attesa'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ASSEGNAZIONE CONTINUA SUI BILIARDINI DISPONIBILI
+        function fillAvailableTables() {
+            const tablesCount = tournamentData.settings?.tablesCount || 4;
+            const matches = tournamentData.matches || [];
+
+            for (let t = 1; t <= tablesCount; t++) {
+                // Controlla se il biliardino è attualmente occupato da una partita in corso
+                const isTableOccupied = matches.some(m => m.status === 'live' && m.table === t);
+                
+                if (!isTableOccupied) {
+                    // Trova le coppie attualmente impegnate in altre partite "live"
+                    const activePairs = new Set();
+                    matches.filter(m => m.status === 'live').forEach(m => {
+                        activePairs.add(m.team1);
+                        activePairs.add(m.team2);
+                    });
+
+                    // Prende la prima partita in coda i cui giocatori NON sono già impegnati in un altro tavolo
+                    const nextMatch = matches.find(m => {
+                        if (m.status !== 'scheduled') return false;
+                        return !activePairs.has(m.team1) && !activePairs.has(m.team2);
+                    });
+
+                    if (nextMatch) {
+                        nextMatch.table = t;
+                        nextMatch.status = 'live';
+                    }
+                }
+            }
+        }
+
+        function checkUserTurnAlert() {
+            if (userRole !== 'player') {
+                document.getElementById('turn-alert-banner').classList.add('hidden');
+                return;
+            }
+
+            const myPair = localStorage.getItem('biliardino_selected_pair');
+            const alertBanner = document.getElementById('turn-alert-banner');
+            const alertIcon = document.getElementById('turn-alert-icon');
+            const alertTitle = document.getElementById('turn-alert-title');
+            const alertDetails = document.getElementById('turn-alert-details');
+
+            if (!myPair) { alertBanner.classList.add('hidden'); return; }
+
+            const liveMatch = (tournamentData.matches || []).find(m => m.status === 'live' && (m.team1 === myPair || m.team2 === myPair));
+            if (liveMatch) {
+                alertBanner.className = "mb-6 rounded-2xl p-4 shadow-xl flex items-center justify-between bg-gradient-to-r from-rose-600 to-red-600 animate-pulse text-white";
+                alertIcon.innerText = "🚨";
+                alertTitle.innerText = "È IL MOMENTO DELLA VOSTRA PARTITA!";
+                alertDetails.innerText = `Siete in campo al Biliardino ${liveMatch.table || 1} contro ${liveMatch.team1 === myPair ? liveMatch.team2 : liveMatch.team1}!`;
+                alertBanner.classList.remove('hidden');
+            } else {
+                const scheduled = (tournamentData.matches || []).filter(m => m.status === 'scheduled');
+                const myQueueIdx = scheduled.findIndex(m => m.team1 === myPair || m.team2 === myPair);
+                if (myQueueIdx >= 0) {
+                    alertBanner.className = "mb-6 rounded-2xl p-4 shadow-xl flex items-center justify-between bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950";
+                    alertIcon.innerText = "⏳";
+                    alertTitle.innerText = "SIETE IN CODA";
+                    alertDetails.innerText = `La vostra prossima partita è in coda (tra circa ${myQueueIdx + 1} turni). Preparatevi!`;
+                    alertBanner.classList.remove('hidden');
+                } else {
+                    alertBanner.classList.add('hidden');
+                }
+            }
+        }
+
+        function dismissTurnAlert() { document.getElementById('turn-alert-banner').classList.add('hidden'); }
+
+        let currentEditingMatchId = null;
+        let isKnockoutMatch = false;
+
+        function openScoreModal(matchId, isKo = false) {
+            currentEditingMatchId = matchId;
+            isKnockoutMatch = isKo;
+            const collection = isKo ? tournamentData.knockoutMatches : tournamentData.matches;
+            const match = collection.find(m => m.id === matchId);
+            if (!match) return;
+
+            document.getElementById('active-match-id').value = matchId;
+            document.getElementById('modal-match-title').innerText = `${match.team1} vs ${match.team2}`;
+            document.getElementById('modal-match-table').innerText = isKo ? 'Playoff' : `Biliardino ${match.table || 1}`;
+            document.getElementById('modal-team1-name').innerText = match.team1;
+            document.getElementById('modal-team2-name').innerText = match.team2;
+            document.getElementById('modal-score1').innerText = match.score1 !== undefined ? match.score1 : 0;
+            document.getElementById('modal-score2').innerText = match.score2 !== undefined ? match.score2 : 0;
+
+            document.getElementById('score-modal').classList.remove('hidden');
+        }
+
+        function closeScoreModal() { document.getElementById('score-modal').classList.add('hidden'); }
+
+        function adjustScore(teamNum, delta) {
+            const scoreEl = document.getElementById(`modal-score${teamNum}`);
+            let val = parseInt(scoreEl.innerText) + delta;
+            if (val < 0) val = 0;
+            scoreEl.innerText = val;
+        }
+
+        function saveMatchScore() {
+            const matchId = document.getElementById('active-match-id').value;
+            const s1 = parseInt(document.getElementById('modal-score1').innerText);
+            const s2 = parseInt(document.getElementById('modal-score2').innerText);
+
+            if (isKnockoutMatch) {
+                const match = tournamentData.knockoutMatches.find(m => m.id === matchId);
+                if (match) { 
+                    match.score1 = s1; 
+                    match.score2 = s2; 
+                    match.status = 'finished'; 
+                    saveCurrentState(); 
+                }
+            } else {
+                const match = tournamentData.matches.find(m => m.id === matchId);
+                if (match) {
+                    match.score1 = s1; 
+                    match.score2 = s2; 
+                    match.status = 'finished';
+                    fillAvailableTables();
+                    saveCurrentState();
+                }
+            }
+            closeScoreModal();
+            renderApp();
+        }
+
+        function switchTab(tabId) {
+            ['matches', 'standings', 'brackets', 'pairs'].forEach(t => {
+                const sec = document.getElementById(`tab-${t}`);
+                const btn = document.getElementById(`nav-tab-${t}`);
+                if (t === tabId) {
+                    sec.classList.remove('hidden');
+                    btn.className = "flex flex-col items-center space-y-1 text-brand-400 transition py-1 px-3 rounded-xl cursor-pointer";
+                } else {
+                    sec.classList.add('hidden');
+                    btn.className = "flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200 transition py-1 px-3 rounded-xl cursor-pointer";
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openShareModal() {
+            const shareUrl = getPlayerShareUrl();
+            document.getElementById('share-modal-link').value = shareUrl;
+            document.getElementById('share-qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(shareUrl)}`;
+            document.getElementById('share-modal').classList.remove('hidden');
+        }
+
+        function closeShareModal() { document.getElementById('share-modal').classList.add('hidden'); }
+
+        function copyShareModalLink() {
+            const input = document.getElementById('share-modal-link');
+            input.select();
+            document.execCommand('copy');
+            alert("Link speciale per i giocatori copiato negli appunti!");
+        }
+    </script>
+</body>
+</html>
