@@ -107,12 +107,12 @@
             </div>
             <div>
                 <h3 class="text-xl font-bold text-white">Torneo Avviato con Successo!</h3>
-                <p class="text-xs text-slate-400 mt-1">Invia questo link o fa inquadrare il QR code ai giocatori per farli accedere.</p>
+                <p class="text-xs text-slate-400 mt-1">Invia questo link ai giocatori. Ciascuno sceglierà la propria coppia per confermare la presenza.</p>
             </div>
 
             <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col items-center justify-center space-y-2">
                 <img id="admin-launch-qr" src="" alt="QR Code Torneo" class="w-44 h-44 rounded-xl border border-slate-700 p-2 bg-white">
-                <span class="text-[10px] text-slate-400 font-mono">Fai inquadrare dal telefono dei giocatori</span>
+                <span class="text-[10px] text-slate-400 font-mono">Inquadra dal telefono dei giocatori</span>
             </div>
 
             <div class="flex items-center space-x-2">
@@ -136,7 +136,7 @@
             </div>
             <div>
                 <h2 class="text-xl font-extrabold text-white">Seleziona la tua Coppia</h2>
-                <p class="text-xs text-slate-400 mt-1">Clicca sul nome della tua coppia per accedere alla diretta e seguire il tuo torneo.</p>
+                <p class="text-xs text-slate-400 mt-1">Clicca sul nome della tua coppia per confermare la presenza ed entrare nel torneo.</p>
             </div>
 
             <div id="checkin-pairs-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1 text-left">
@@ -165,7 +165,7 @@
                 <div class="flex items-center space-x-2">
                     <button type="button" onclick="switchUserRolePrompt()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-sky-400 font-semibold rounded-xl text-xs transition flex items-center space-x-1.5 cursor-pointer">
                         <i class="fa-solid fa-user-gear"></i>
-                        <span class="hidden sm:inline">Cambia Ruolo/Coppia</span>
+                        <span class="hidden sm:inline">Cambia Coppia / Ruolo</span>
                     </button>
                     <button type="button" onclick="openShareModal()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition flex items-center space-x-1.5 cursor-pointer">
                         <i class="fa-solid fa-qrcode text-brand-400"></i>
@@ -202,7 +202,7 @@
                             <i class="fa-solid fa-bolt text-amber-400"></i>
                             <span>Biliardini & Partite Live</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Aggiornamento automatico delle partite in corso e in coda</p>
+                        <p class="text-xs text-slate-400">Le partite avanzano automaticamente per le coppie con presenza confermata (🟢)</p>
                     </div>
                     <div class="flex items-center space-x-2">
                         <button type="button" onclick="switchMatchSubTab('live')" id="subtab-live-btn" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-500 text-slate-950 transition cursor-pointer">In Corso</button>
@@ -256,9 +256,9 @@
                     <div>
                         <h2 class="text-xl font-bold text-white flex items-center space-x-2">
                             <i class="fa-solid fa-user-group text-brand-400"></i>
-                            <span>Coppie Partecipanti</span>
+                            <span>Coppie & Stato Presenze</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Elenco di tutte le coppie iscritte al torneo</p>
+                        <p class="text-xs text-slate-400">Elenco delle coppie iscritte e presenza confermata</p>
                     </div>
                 </div>
                 <div id="pairs-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
@@ -391,20 +391,23 @@
         function routeCurrentView() {
             hideAllViews();
 
-            // Check if URL explicitly requests player mode via hash
-            if (window.location.hash === '#player') {
+            // Checkse il link contiene l'hash #player
+            const isPlayerHash = window.location.hash === '#player';
+            if (isPlayerHash) {
                 userRole = 'player';
             }
 
-            // Se il torneo non è ancora avviato, mostra SEMPRE il setup admin (solo per l'admin locale)
-            if (tournamentData.status === 'setup') {
+            // Se il torneo è in configurazione e NON siamo in modalità giocatore da link
+            if (tournamentData.status === 'setup' && !isPlayerHash) {
+                userRole = 'admin';
                 document.getElementById('view-setup').classList.remove('hidden');
                 renderSetupPairs();
                 return;
             }
 
-            // Se siamo in modalità giocatore
-            if (userRole === 'player') {
+            // Se l'utente è un giocatore, verifica se ha già selezionato la sua coppia
+            if (userRole === 'player' || isPlayerHash) {
+                userRole = 'player';
                 const selectedPair = localStorage.getItem('biliardino_selected_pair');
                 if (!selectedPair) {
                     openCheckinGateway();
@@ -423,15 +426,9 @@
         }
 
         function switchUserRolePrompt() {
-            if (userRole === 'admin') {
-                userRole = 'player';
-                localStorage.setItem('biliardino_user_role', 'player');
-                openCheckinGateway();
-            } else {
-                userRole = 'admin';
-                localStorage.setItem('biliardino_user_role', 'admin');
-                routeCurrentView();
-            }
+            localStorage.removeItem('biliardino_selected_pair');
+            userRole = 'player';
+            openCheckinGateway();
         }
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -445,10 +442,6 @@
                 } catch(e) {
                     console.error("Storage parse error", e);
                 }
-            }
-
-            if (window.location.hash === '#player' || localStorage.getItem('biliardino_user_role') === 'player') {
-                userRole = 'player';
             }
 
             routeCurrentView();
@@ -477,7 +470,8 @@
                         tempParsedPairs.push({
                             id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
                             name: cleaned,
-                            group: 'A'
+                            group: 'A',
+                            checkedIn: false
                         });
                         addedCount++;
                     }
@@ -539,7 +533,8 @@
 
             const assignedPairs = tempParsedPairs.map((p, idx) => ({
                 ...p,
-                group: groupLetters[idx % groupsCount]
+                group: groupLetters[idx % groupsCount],
+                checkedIn: false
             }));
 
             const matches = [];
@@ -608,19 +603,19 @@
             const pairs = tournamentData.pairs || [];
 
             if (pairs.length === 0) {
-                list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Nessuna coppia trovata. Avvia prima il torneo dall'Admin.</p>`;
+                list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Nessuna coppia trovata. L'amministratore deve prima avviare il torneo.</p>`;
                 return;
             }
 
             list.innerHTML = pairs.map(p => `
                 <button type="button" onclick="selectMyPair('${p.name.replace(/'/g, "\\'")}')" class="w-full text-left p-3.5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-brand-500 hover:bg-slate-800/50 transition font-bold text-sm text-slate-200 flex items-center justify-between group cursor-pointer">
                     <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center font-bold text-xs group-hover:bg-brand-500 group-hover:text-slate-950 transition">
-                            ⚽
+                        <div class="w-8 h-8 rounded-xl ${p.checkedIn ? 'bg-brand-500/20 text-brand-400' : 'bg-slate-800 text-slate-400'} flex items-center justify-center font-bold text-xs group-hover:bg-brand-500 group-hover:text-slate-950 transition">
+                            ${p.checkedIn ? '🟢' : '⚽'}
                         </div>
                         <div>
                             <span>${p.name}</span>
-                            <span class="block text-[10px] text-slate-400 font-normal">Girone ${p.group || 'A'}</span>
+                            <span class="block text-[10px] text-slate-400 font-normal">Girone ${p.group || 'A'} ${p.checkedIn ? '• Presente' : '• In Attesa'}</span>
                         </div>
                     </div>
                     <i class="fa-solid fa-arrow-right text-brand-400 text-xs"></i>
@@ -631,12 +626,22 @@
         function selectMyPair(pairName) {
             localStorage.setItem('biliardino_selected_pair', pairName);
             userRole = 'player';
+
+            // Segna la coppia come presente/connessa
+            const p = (tournamentData.pairs || []).find(x => x.name === pairName);
+            if (p) {
+                p.checkedIn = true;
+            }
+
+            fillAvailableTables();
+            saveCurrentState();
             routeCurrentView();
         }
 
         let currentMatchSubTab = 'live';
 
         function renderApp() {
+            fillAvailableTables();
             renderMatches();
             renderStandings();
             renderBrackets();
@@ -925,6 +930,12 @@
                         <span class="font-bold text-xs text-white truncate">${p.name}</span>
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-500/20 text-brand-400">Girone ${p.group || 'A'}</span>
                     </div>
+                    <div class="flex items-center justify-between text-[11px]">
+                        <span class="text-slate-400">Presenza:</span>
+                        <span class="font-bold ${p.checkedIn ? 'text-brand-400' : 'text-amber-400'}">
+                            ${p.checkedIn ? '🟢 Connesso/Presente' : '🔴 In Attesa'}
+                        </span>
+                    </div>
                 </div>
             `).join('');
         }
@@ -932,6 +943,7 @@
         function fillAvailableTables() {
             const tablesCount = tournamentData.settings?.tablesCount || 4;
             const matches = tournamentData.matches || [];
+            const pairs = tournamentData.pairs || [];
 
             const activePairs = new Set();
             matches.filter(m => m.status === 'live').forEach(m => {
@@ -939,10 +951,23 @@
                 activePairs.add(m.team2);
             });
 
+            // Considera solo le coppie che hanno effettuato il check-in (🟢)
+            const checkedInSet = new Set(pairs.filter(p => p.checkedIn).map(p => p.name));
+            const hasAnyCheckin = checkedInSet.size > 0;
+
             for (let t = 1; t <= tablesCount; t++) {
                 const isTableOccupied = matches.some(m => m.status === 'live' && m.table === t);
                 if (!isTableOccupied) {
-                    const nextMatch = matches.find(m => m.status === 'scheduled' && !activePairs.has(m.team1) && !activePairs.has(m.team2));
+                    // Assegna il biliardino solo se ENTRAMBE le squadre hanno fatto il check-in
+                    const nextMatch = matches.find(m => {
+                        if (m.status !== 'scheduled') return false;
+                        if (activePairs.has(m.team1) || activePairs.has(m.team2)) return false;
+                        if (hasAnyCheckin) {
+                            return checkedInSet.has(m.team1) && checkedInSet.has(m.team2);
+                        }
+                        return false; // Se nessuno ha fatto check-in, aspetta che entrino
+                    });
+
                     if (nextMatch) {
                         nextMatch.table = t;
                         nextMatch.status = 'live';
