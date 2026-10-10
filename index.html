@@ -30,7 +30,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-full flex flex-col antialiased selection:bg-brand-500 selection:text-white">
 
-    <!-- STEP 1: ADMIN SETUP & CONFIGURATION PANEL -->
+    <!-- STEP 1: ADMIN SETUP PANEL -->
     <div id="view-setup" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4 overflow-y-auto hidden">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative space-y-6 my-auto">
             <div class="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -40,12 +40,12 @@
                     </div>
                     <div>
                         <h2 class="text-xl font-bold text-white">Pannello Amministratore</h2>
-                        <p class="text-xs text-slate-400">Configura il torneo prima di generare il link per i giocatori</p>
+                        <p class="text-xs text-slate-400">Configura il torneo e incolla la lista da WhatsApp</p>
                     </div>
                 </div>
             </div>
 
-            <!-- WhatsApp Paste Parser Box -->
+            <!-- WhatsApp Paste Box -->
             <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2 text-brand-400 font-bold text-xs uppercase tracking-wider">
@@ -54,9 +54,7 @@
                     </div>
                     <span id="setup-extracted-count" class="text-xs font-bold text-brand-400">0 coppie pronte</span>
                 </div>
-                <p class="text-xs text-slate-400">
-                    Incolla la lista copiata da WhatsApp. Il sistema riconosce automaticamente le coppie.
-                </p>
+                <p class="text-xs text-slate-400">Incolla il testo copiato da WhatsApp. Estrazione automatica dei nomi.</p>
                 <textarea id="setup-whatsapp-input" rows="4" placeholder="1. Mario Rossi - Luca Bianchi&#10;2) Giuseppe Verdi / Francesco Neri&#10;3. Paolo Rinaldi & Andrea Gialli..." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white placeholder-slate-600 focus:outline-none focus:border-brand-500 text-xs font-mono"></textarea>
                 <button type="button" onclick="parseSetupWhatsAppList()" class="w-full py-2.5 bg-brand-500 hover:bg-brand-600 active:scale-98 text-slate-950 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-2 shadow-md cursor-pointer">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -94,7 +92,7 @@
             <!-- Start Action Button -->
             <button type="button" onclick="launchSetupTournament()" class="w-full py-4 bg-brand-500 hover:bg-brand-600 active:scale-98 text-slate-950 font-extrabold rounded-2xl text-base shadow-xl shadow-brand-500/25 transition flex items-center justify-center space-x-2 cursor-pointer">
                 <i class="fa-solid fa-play"></i>
-                <span>AVVIA TORNEO & OTTIENI LINK GIOCATORI 🚀</span>
+                <span>AVVIA TORNEO & GENERI LINK GIOCATORI 🚀</span>
             </button>
         </div>
     </div>
@@ -107,7 +105,7 @@
             </div>
             <div>
                 <h3 class="text-xl font-bold text-white">Torneo Avviato con Successo!</h3>
-                <p class="text-xs text-slate-400 mt-1">Invia questo link ai giocatori. Ciascuno sceglierà la propria coppia per confermare la presenza.</p>
+                <p class="text-xs text-slate-400 mt-1">Invia questo link ai giocatori per farli accedere e confermare la presenza.</p>
             </div>
 
             <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col items-center justify-center space-y-2">
@@ -123,7 +121,7 @@
             </div>
 
             <button type="button" onclick="closeAdminLaunchModal()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition cursor-pointer">
-                Vai alla Dashboard Admin
+                Vai alla Dashboard
             </button>
         </div>
     </div>
@@ -136,7 +134,7 @@
             </div>
             <div>
                 <h2 class="text-xl font-extrabold text-white">Seleziona la tua Coppia</h2>
-                <p class="text-xs text-slate-400 mt-1">Clicca sul nome della tua coppia per confermare la presenza ed entrare nel torneo.</p>
+                <p class="text-xs text-slate-400 mt-1">Conferma la presenza della tua coppia per attivare subito le partite al biliardino.</p>
             </div>
 
             <div id="checkin-pairs-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1 text-left">
@@ -202,11 +200,11 @@
                             <i class="fa-solid fa-bolt text-amber-400"></i>
                             <span>Biliardini & Partite Live</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Le partite avanzano automaticamente per le coppie con presenza confermata (🟢)</p>
+                        <p class="text-xs text-slate-400">Generazione continua delle partite con le coppie connesse</p>
                     </div>
                     <div class="flex items-center space-x-2">
                         <button type="button" onclick="switchMatchSubTab('live')" id="subtab-live-btn" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-500 text-slate-950 transition cursor-pointer">In Corso</button>
-                        <button type="button" onclick="switchMatchSubTab('upcoming')" id="subtab-upcoming-btn" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition cursor-pointer">Coda</button>
+                        <button type="button" onclick="switchMatchSubTab('upcoming')" id="subtab-upcoming-btn" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition cursor-pointer">In Coda</button>
                         <button type="button" onclick="switchMatchSubTab('finished')" id="subtab-finished-btn" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 transition cursor-pointer">Terminate</button>
                     </div>
                 </div>
@@ -256,9 +254,9 @@
                     <div>
                         <h2 class="text-xl font-bold text-white flex items-center space-x-2">
                             <i class="fa-solid fa-user-group text-brand-400"></i>
-                            <span>Coppie & Stato Presenze</span>
+                            <span>Coppie & Presenze</span>
                         </h2>
-                        <p class="text-xs text-slate-400">Elenco delle coppie iscritte e presenza confermata</p>
+                        <p class="text-xs text-slate-400">Stato presenza e connessione delle coppie</p>
                     </div>
                 </div>
                 <div id="pairs-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
@@ -300,7 +298,7 @@
                 <button type="button" onclick="closeShareModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <p class="text-xs text-slate-400">
-                Manda questo link sul gruppo WhatsApp per far scegliere ai giocatori la propria coppia.
+                Condividi questo link per far selezionare la propria coppia ai giocatori.
             </p>
 
             <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col items-center justify-center space-y-2">
@@ -391,13 +389,11 @@
         function routeCurrentView() {
             hideAllViews();
 
-            // Checkse il link contiene l'hash #player
             const isPlayerHash = window.location.hash === '#player';
             if (isPlayerHash) {
                 userRole = 'player';
             }
 
-            // Se il torneo è in configurazione e NON siamo in modalità giocatore da link
             if (tournamentData.status === 'setup' && !isPlayerHash) {
                 userRole = 'admin';
                 document.getElementById('view-setup').classList.remove('hidden');
@@ -405,7 +401,6 @@
                 return;
             }
 
-            // Se l'utente è un giocatore, verifica se ha già selezionato la sua coppia
             if (userRole === 'player' || isPlayerHash) {
                 userRole = 'player';
                 const selectedPair = localStorage.getItem('biliardino_selected_pair');
@@ -415,7 +410,6 @@
                 }
             }
 
-            // Altrimenti mostra la dashboard live
             document.getElementById('view-live-dashboard').classList.remove('hidden');
             const roleEl = document.getElementById('user-display-role');
             if (roleEl) {
@@ -482,7 +476,7 @@
                 document.getElementById('setup-whatsapp-input').value = '';
                 renderSetupPairs();
             } else {
-                alert("Nessuna nuova coppia trovata. Verifica che il testo incollato contenga i nomi.");
+                alert("Nessuna nuova coppia trovata.");
             }
         }
 
@@ -603,7 +597,7 @@
             const pairs = tournamentData.pairs || [];
 
             if (pairs.length === 0) {
-                list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Nessuna coppia trovata. L'amministratore deve prima avviare il torneo.</p>`;
+                list.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Nessuna coppia trovata. Avvia prima il torneo dall'Admin.</p>`;
                 return;
             }
 
@@ -627,7 +621,7 @@
             localStorage.setItem('biliardino_selected_pair', pairName);
             userRole = 'player';
 
-            // Segna la coppia come presente/connessa
+            // Segna la coppia come connesa/presente
             const p = (tournamentData.pairs || []).find(x => x.name === pairName);
             if (p) {
                 p.checkedIn = true;
@@ -940,6 +934,7 @@
             `).join('');
         }
 
+        // ASSEGNAZIONE CONTINUA SUI BILIARDINI IN BASE ALLE PRESENZE
         function fillAvailableTables() {
             const tablesCount = tournamentData.settings?.tablesCount || 4;
             const matches = tournamentData.matches || [];
@@ -951,22 +946,34 @@
                 activePairs.add(m.team2);
             });
 
-            // Considera solo le coppie che hanno effettuato il check-in (🟢)
             const checkedInSet = new Set(pairs.filter(p => p.checkedIn).map(p => p.name));
-            const hasAnyCheckin = checkedInSet.size > 0;
 
             for (let t = 1; t <= tablesCount; t++) {
                 const isTableOccupied = matches.some(m => m.status === 'live' && m.table === t);
                 if (!isTableOccupied) {
-                    // Assegna il biliardino solo se ENTRAMBE le squadre hanno fatto il check-in
-                    const nextMatch = matches.find(m => {
+                    // Priorità 1: Partita in cui ENTRAMBE le coppie hanno fatto il Check-in (🟢)
+                    let nextMatch = matches.find(m => {
                         if (m.status !== 'scheduled') return false;
                         if (activePairs.has(m.team1) || activePairs.has(m.team2)) return false;
-                        if (hasAnyCheckin) {
-                            return checkedInSet.has(m.team1) && checkedInSet.has(m.team2);
-                        }
-                        return false; // Se nessuno ha fatto check-in, aspetta che entrino
+                        return checkedInSet.has(m.team1) && checkedInSet.has(m.team2);
                     });
+
+                    // Priorità 2: Partita in cui ALMENO UNA coppia ha fatto il Check-in
+                    if (!nextMatch) {
+                        nextMatch = matches.find(m => {
+                            if (m.status !== 'scheduled') return false;
+                            if (activePairs.has(m.team1) || activePairs.has(m.team2)) return false;
+                            return checkedInSet.has(m.team1) || checkedInSet.has(m.team2);
+                        });
+                    }
+
+                    // Priorità 3: Se non ci sono check-in attivi, prendi la prima in coda del girone
+                    if (!nextMatch && checkedInSet.size === 0) {
+                        nextMatch = matches.find(m => {
+                            if (m.status !== 'scheduled') return false;
+                            return !activePairs.has(m.team1) && !activePairs.has(m.team2);
+                        });
+                    }
 
                     if (nextMatch) {
                         nextMatch.table = t;
@@ -1101,7 +1108,7 @@
             const input = document.getElementById('share-modal-link');
             input.select();
             document.execCommand('copy');
-            alert("Link speciale per i giocatori copiato negli appunti!");
+            alert("Link per i giocatori copiato negli appunti!");
         }
     </script>
 </body>
